@@ -17,6 +17,11 @@ Install-Module UniversalDashboard.Forge
 # Requirements
 
 - [NodeJS ](https://nodejs.org/)
+- [PowerShell Core](https://github.com/PowerShell/PowerShell/releases)
+
+# Dashboard
+
+Your dashboard file needs to be called `dashboard.ps1`, listen on port 8001 and use the `-Wait` parameter of `Start-UDDashboard`.
 
 # Usage 
 
