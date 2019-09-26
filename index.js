@@ -19,13 +19,13 @@ const createWindow = () => {
 
   var child_process = require('child_process');
   var dashboard_path = path.join(__dirname, 'dashboard.ps1')
-  child = child_process.spawn("pwsh", ["-file", dashboard_path]);
+  child = child_process.spawn("$PowerShellHost", ["-file", dashboard_path]);
 
   mainWindow.webContents.on('did-fail-load',
   function (event, errorCode, errorDescription) {
       console.log('Page failed to load (' + errorCode + '). The server is probably not yet running. Trying again in 100ms.');
       setTimeout(function() {
-          win.webContents.reload();
+        mainWindow.webContents.reload();
       }, 100);
   })
 

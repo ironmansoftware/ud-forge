@@ -28,7 +28,10 @@ function New-UDDesktopApp {
         [Parameter(Mandatory)]
         $Name,
         [Parameter()]
-        $OutputPath
+        $OutputPath,
+        [Parameter()]
+        [ValidateSet("pwsh", "powershell")]
+        $PowerShellHost = "pwsh"
     )
 
     End {
@@ -75,6 +78,9 @@ function New-UDDesktopApp {
     
         Copy-Item -Path $Path -Destination $src
         Copy-Item -Path (Join-Path $PSScriptRoot "index.js" ) -Destination $src -Force
+        $IndexJs = Join-Path $src "index.js"
+
+        Set-ForgeVariable -IndexPath $IndexJs -PowerShellHost $PowerShellHost
 
         Write-Verbose "Building electron app with forge"
     
@@ -82,4 +88,17 @@ function New-UDDesktopApp {
         Set-Location (Join-Path $OutputPath $Name)
         electron-forge make
     }
+}
+
+function Set-ForgeVariable {
+    param(
+        $IndexPath,
+        $PowerShellHost
+    )
+
+    $Content = Get-Content -Path $IndexPath -Raw
+
+    Write-Verbose "Setting ForgeVariable PowerShellHost: $PowerShellHost"
+    $Content = $Content.Replace('$PowerShellHost', $PowerShellHost)
+    $Content | Out-File -FilePath $IndexPath -Force -Encoding utf8
 }
