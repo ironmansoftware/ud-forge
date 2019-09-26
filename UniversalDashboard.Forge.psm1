@@ -21,6 +21,11 @@ function New-UDDesktopApp {
         Remove-Item (Join-Path $OutputPath $Name) -Force -Recurse
     }
 
+    if (-not (Test-Path $OutputPath))
+    {
+        New-Item -Path $OutputPath -ItemType Directory | Out-Null
+    }
+
     Set-Location $OutputPath
     npx create-electron-app $Name
 
