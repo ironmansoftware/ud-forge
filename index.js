@@ -32,8 +32,8 @@ const createWindow = () => {
   setTimeout(function() {
 
     // and load the index.html of the app.
-    mainWindow.loadURL('http://127.0.0.1:8001')
-  
+    mainWindow.loadURL('http://127.0.0.1:$Port')
+
   }, 1000)
 
   // Emitted when the window is closed.
