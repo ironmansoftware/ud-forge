@@ -116,6 +116,7 @@ function Get-PortNumber {
     )
 
     $content = Get-Content -Path $Path
+    $match = [regex]::Match($content, '[sS]tart-[uUdD]{3}ash.+-Port (\d+)')
 
-    if (-not ([regex]::Match($content, '[sS]tart-[uUdD]{3}ash.+-Port (\d+)').Success)) { 80 }
+    if ($match.Success) { $match.Groups[1].Value } else { 80 }
 }
