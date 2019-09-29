@@ -77,12 +77,21 @@ function New-UDDesktopApp {
 
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
 
-        Copy-Item -Path $Path -Destination $src
+        $Content = Get-Content $Path -Raw
+        $Content = "
+        `$Env:PSModulePath = `$Env:PSModulePath + `";`$PSScriptRoot`"
+        Import-Module UniversalDashboard" + [System.Environment]::NewLine + $Content
+        $Content | Out-File (Join-Path $Src "dashboard.ps1")
+
         Copy-Item -Path (Join-Path $PSScriptRoot "index.js" ) -Destination $src -Force
         $IndexJs = Join-Path $src "index.js"
 
         $port = Get-PortNumber -Path $Path
         Set-ForgeVariable -IndexPath $IndexJs -PowerShellHost $PowerShellHost -Port $port
+
+        Write-Verbose "Copying Universal Dashboard to output path"
+
+        Copy-UniversalDashboard -OutputPath $src
 
         Write-Verbose "Building electron app with forge"
 
@@ -90,6 +99,18 @@ function New-UDDesktopApp {
         Set-Location (Join-Path $OutputPath $Name)
         electron-forge make
     }
+}
+
+function Copy-UniversalDashboard {
+    param($OutputPath)
+
+    $UniversaDashboard = Get-Module -Name UniversalDashboard -ListAvailable
+    $Directory = Split-Path $UniversaDashboard.Path -Parent
+
+    $UDDirectory = Join-Path $OutputPath "UniversalDashboard"
+    New-Item $UDDirectory -ItemType Directory | Out-Null
+
+    Copy-Item $Directory -Recurse -Destination $UDDirectory
 }
 
 function Set-ForgeVariable {

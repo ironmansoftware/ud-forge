@@ -31,3 +31,11 @@ New-UDDesktopApp -Path .\dashboard.ps1 -OutputPath .\out -Name MyApp
 .\out\MyApp\MyApp.exe
 ```
 
+# Installer
+
+An installer is also created in the output directory. This contains all the files necessary for electron, the app and Universal Dashboard. 
+
+```
+.\MyApp\out\make\squirrel.windows\x64\myapp-1.0.0 Setup.exe
+```
+
