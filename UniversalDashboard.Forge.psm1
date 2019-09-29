@@ -105,6 +105,12 @@ function Copy-UniversalDashboard {
     param($OutputPath)
 
     $UniversaDashboard = Get-Module -Name UniversalDashboard -ListAvailable
+
+    if ($null -eq $UniversaDashboard)
+    {
+        throw "You need to install UniversalDashboard: Install-Module UniversalDashboard -Scope CurrentUser -AcceptList"
+    }
+
     $Directory = Split-Path $UniversaDashboard.Path -Parent
 
     $UDDirectory = Join-Path $OutputPath "UniversalDashboard"
