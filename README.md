@@ -25,10 +25,20 @@ Your dashboard file needs to be called `dashboard.ps1`, listen on port 8001 and 
 
 # Usage 
 
+Package a single ps1 file as a desktop application.
+
 ```
 Import-Module UniversalDashboard.Forge
 New-UDDesktopApp -Path .\dashboard.ps1 -OutputPath .\out -Name MyApp
-.\out\MyApp\MyApp.exe
+.\out\MyApp\out\myapp-win32-x64\MyApp.exe
+```
+
+Package a folder as a desktop application. UDForge will verify that the folder contains a dashboard.ps1 file. This file should call `Start-UDDashboard`.
+
+```
+Import-Module UniversalDashboard.Forge
+New-UDDesktopApp -Path .\dashboard -OutputPath .\out -Name MyApp
+.\out\MyApp\out\myapp-win32-x64\MyApp.exe
 ```
 
 # Installer

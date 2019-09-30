@@ -35,6 +35,26 @@ function New-UDDesktopApp {
     )
 
     End {
+        $provider = $null;
+        $drive = $null
+        $pathHelper = $ExecutionContext.SessionState.Path
+        $Path = $pathHelper.GetUnresolvedProviderPathFromPSPath($Path, [ref]$provider, [ref]$drive)
+        $PathInfo = Get-Item $Path
+
+        if ($PathInfo.PSIsContainer)
+        {
+            Write-Verbose "Path is a directory. Locating dashboard.ps1"
+            $Dashboard = Join-Path $PathInfo.FullName "dashboard.ps1"
+            if (-not (Test-Path $Dashboard))
+            {
+                throw "No dashboard.ps1 found in $Path"
+            }
+        }
+        else 
+        {
+            $Dashboard = $Path
+        }
+
         $Npx = Get-Command npx
         if ($null -eq $Npx)
         {
@@ -75,18 +95,24 @@ function New-UDDesktopApp {
 
         $src = [IO.Path]::Combine($OutputPath, $Name, 'src')
 
+        if ($PathInfo.PSIsContainer)
+        {
+            Write-Verbose "Copying contents of $Path to $src"
+            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse 
+        }
+
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
 
-        $Content = Get-Content $Path -Raw
+        $Content = Get-Content $Dashboard -Raw
         $Content = "
         `$Env:PSModulePath = `$Env:PSModulePath + `";`$PSScriptRoot`"
         Import-Module UniversalDashboard" + [System.Environment]::NewLine + $Content
-        $Content | Out-File (Join-Path $Src "dashboard.ps1")
+        $Content | Out-File (Join-Path $Src "dashboard.ps1") -Force -Encoding utf8
 
         Copy-Item -Path (Join-Path $PSScriptRoot "index.js" ) -Destination $src -Force
         $IndexJs = Join-Path $src "index.js"
 
-        $port = Get-PortNumber -Path $Path
+        $port = Get-PortNumber -Path $Dashboard
         Set-ForgeVariable -IndexPath $IndexJs -PowerShellHost $PowerShellHost -Port $port
 
         Write-Verbose "Copying Universal Dashboard to output path"
