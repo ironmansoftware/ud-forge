@@ -31,7 +31,13 @@ function New-UDDesktopApp {
         $OutputPath,
         [Parameter()]
         [ValidateSet("pwsh", "powershell")]
-        $PowerShellHost = "pwsh"
+        $PowerShellHost = "pwsh",
+        [Parameter()]
+        $IconUrl,
+        [Parameter()]
+        $SetupIcon,
+        [Parameter()]
+        $LoadingGif
     )
 
     End {
@@ -114,6 +120,13 @@ function New-UDDesktopApp {
 
         $port = Get-PortNumber -Path $Dashboard
         Set-ForgeVariable -IndexPath $IndexJs -PowerShellHost $PowerShellHost -Port $port
+
+        $PackageConfig = [IO.Path]::Combine($OutputPath, $Name, 'package.json')
+        $SquirrelSplat = @{'ConfigPath' = $PackageConfig}
+        if ($IconUrl) {$SquirrelSplat['IconUrl'] = $IconUrl}
+        if ($SetupIcon) {$SquirrelSplat['SetupIcon'] = $SetupIcon}
+        if ($LoadingGif) {$SquirrelSplat['LoadingGif'] = $LoadingGif}
+        Set-SquirrelConfig @SquirrelSplat
 
         Write-Verbose "Copying Universal Dashboard to output path"
 
