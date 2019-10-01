@@ -50,7 +50,7 @@ function New-UDDesktopApp {
                 throw "No dashboard.ps1 found in $Path"
             }
         }
-        else 
+        else
         {
             $Dashboard = $Path
         }
@@ -98,7 +98,7 @@ function New-UDDesktopApp {
         if ($PathInfo.PSIsContainer)
         {
             Write-Verbose "Copying contents of $Path to $src"
-            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse 
+            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse
         }
 
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
@@ -172,4 +172,37 @@ function Get-PortNumber {
     $match = [regex]::Match($content, '[sS]tart-[uUdD]{3}ash.+-Port (\d+)')
 
     if ($match.Success) { $match.Groups[1].Value } else { 80 }
+}
+
+function Set-SquirrelConfig {
+    param(
+        [Parameter(Mandatory)]
+        $ConfigPath,
+
+        $IconUrl,
+
+        $SetupIcon,
+
+        $LoadingGif
+    )
+
+    $Content = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
+    $SquirrelConfig = $Content.config.forge.makers | Where-Object {$_.name -like '*squirrel'}
+
+    if ($IconUrl) {
+        Write-Verbose "Setting SquirrelConfig IconUrl: $IconUrl"
+        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'iconUrl' -Value $IconUrl
+    }
+
+    if ($SetupIcon) {
+        Write-Verbose "Setting SquirrelConfig SetupIcon: $SetupIcon"
+        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'setupIcon' -Value $SetupIcon
+    }
+
+    if ($LoadingGif) {
+        Write-Verbose "Setting SquirrelConfig LoadingGif: $LoadingGif"
+        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'loadingGif' -Value $LoadingGif
+    }
+
+    $Content | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigPath -Force -Encoding utf8
 }
