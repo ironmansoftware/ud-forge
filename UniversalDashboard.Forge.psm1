@@ -15,6 +15,19 @@ function New-UDDesktopApp {
     .PARAMETER OutputPath
     The output path for the application.
 
+    .PARAMETER IconUrl
+    A web URL to an .ICO file to use as the icon displayed in "Programs and Features."
+
+    If not specified, the Atom logo will be used.
+
+    .PARAMETER SetupIcon
+    The .ICO file used as the icon on the generated install file.
+
+    Must be a path to the file on a local disk.
+
+    .PARAMETER LoadingGif
+    The local path to a .GIF to be displayed as a splash while installing your generated application.
+
     .EXAMPLE
     New-UDDesktopApp -Path "./dashboard.ps1" -OutputPath "./out" -Name "MyApp"
 
@@ -31,7 +44,13 @@ function New-UDDesktopApp {
         $OutputPath,
         [Parameter()]
         [ValidateSet("pwsh", "powershell")]
-        $PowerShellHost = "pwsh"
+        $PowerShellHost = "pwsh",
+        [Parameter()]
+        $IconUrl,
+        [Parameter()]
+        $SetupIcon,
+        [Parameter()]
+        $LoadingGif
     )
 
     End {
@@ -50,7 +69,7 @@ function New-UDDesktopApp {
                 throw "No dashboard.ps1 found in $Path"
             }
         }
-        else 
+        else
         {
             $Dashboard = $Path
         }
@@ -98,7 +117,7 @@ function New-UDDesktopApp {
         if ($PathInfo.PSIsContainer)
         {
             Write-Verbose "Copying contents of $Path to $src"
-            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse 
+            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse
         }
 
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
@@ -114,6 +133,13 @@ function New-UDDesktopApp {
 
         $port = Get-PortNumber -Path $Dashboard
         Set-ForgeVariable -IndexPath $IndexJs -PowerShellHost $PowerShellHost -Port $port
+
+        $PackageConfig = [IO.Path]::Combine($OutputPath, $Name, 'package.json')
+        $SquirrelSplat = @{'ConfigPath' = $PackageConfig}
+        if ($IconUrl) {$SquirrelSplat['IconUrl'] = $IconUrl}
+        if ($SetupIcon) {$SquirrelSplat['SetupIcon'] = $SetupIcon}
+        if ($LoadingGif) {$SquirrelSplat['LoadingGif'] = $LoadingGif}
+        Set-SquirrelConfig @SquirrelSplat
 
         Write-Verbose "Copying Universal Dashboard to output path"
 
@@ -172,4 +198,37 @@ function Get-PortNumber {
     $match = [regex]::Match($content, '[sS]tart-[uUdD]{3}ash.+-Port (\d+)')
 
     if ($match.Success) { $match.Groups[1].Value } else { 80 }
+}
+
+function Set-SquirrelConfig {
+    param(
+        [Parameter(Mandatory)]
+        $ConfigPath,
+
+        $IconUrl,
+
+        $SetupIcon,
+
+        $LoadingGif
+    )
+
+    $Content = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
+    $SquirrelConfig = $Content.config.forge.makers | Where-Object {$_.name -like '*squirrel'}
+
+    if ($IconUrl) {
+        Write-Verbose "Setting SquirrelConfig IconUrl: $IconUrl"
+        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'iconUrl' -Value $IconUrl
+    }
+
+    if ($SetupIcon) {
+        Write-Verbose "Setting SquirrelConfig SetupIcon: $SetupIcon"
+        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'setupIcon' -Value $SetupIcon
+    }
+
+    if ($LoadingGif) {
+        Write-Verbose "Setting SquirrelConfig LoadingGif: $LoadingGif"
+        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'loadingGif' -Value $LoadingGif
+    }
+
+    $Content | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigPath -Force -Encoding utf8
 }
