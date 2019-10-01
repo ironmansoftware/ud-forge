@@ -50,7 +50,7 @@ function New-UDDesktopApp {
                 throw "No dashboard.ps1 found in $Path"
             }
         }
-        else 
+        else
         {
             $Dashboard = $Path
         }
@@ -98,15 +98,18 @@ function New-UDDesktopApp {
         if ($PathInfo.PSIsContainer)
         {
             Write-Verbose "Copying contents of $Path to $src"
-            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse 
+            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse
         }
 
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
 
         $Content = Get-Content $Dashboard -Raw
-        $Content = "
-        `$Env:PSModulePath = `$Env:PSModulePath + `";`$PSScriptRoot`"
-        Import-Module UniversalDashboard" + [System.Environment]::NewLine + $Content
+        $Content = @"
+{0} = {0} + "; {1}"
+Import-Module UniversalDashboard
+
+$Content
+"@ -f '$Env:PSModulePath', '$PSScriptRoot'
         $Content | Out-File (Join-Path $Src "dashboard.ps1") -Force -Encoding utf8
 
         Copy-Item -Path (Join-Path $PSScriptRoot "index.js" ) -Destination $src -Force
@@ -130,7 +133,7 @@ function New-UDDesktopApp {
 function Copy-UniversalDashboard {
     param($OutputPath)
 
-    $UniversaDashboard = Get-Module -Name UniversalDashboard -ListAvailable
+    $UniversaDashboard = Get-Module -Name UniversalDashboard #-ListAvailable
 
     if ($null -eq $UniversaDashboard)
     {
