@@ -15,6 +15,19 @@ function New-UDDesktopApp {
     .PARAMETER OutputPath
     The output path for the application.
 
+    .PARAMETER IconUrl
+    A web URL to an .ICO file to use as the icon displayed in "Programs and Features."
+
+    If not specified, the Atom logo will be used.
+
+    .PARAMETER SetupIcon
+    The .ICO file used as the icon on the generated install file.
+
+    Must be a path to the file on a local disk.
+
+    .PARAMETER LoadingGif
+    The local path to a .GIF to be displayed as a splash while installing your generated application.
+
     .EXAMPLE
     New-UDDesktopApp -Path "./dashboard.ps1" -OutputPath "./out" -Name "MyApp"
 
