@@ -222,7 +222,7 @@ function Set-SquirrelConfig {
     $keys = $PSBoundParameters.Keys.Where({$_ -ne 'ConfigPath'})
 
     foreach ($parameter in $keys) {
-        Write-Verbose ('Setting SquirrelConfig {0}: {1}'-f $parameter, $PSBoundParameters[$parameter])
+        Write-Verbose ('Setting SquirrelConfig {0}: {1}' -f $parameter, $PSBoundParameters[$parameter])
         $name = $parameter -replace '^\w', $parameter.Substring(0, 1).ToLower()
         $squirrelConfig | Add-Member -MemberType NoteProperty -Name $name -Value $PSBoundParameters[$parameter]
     }
