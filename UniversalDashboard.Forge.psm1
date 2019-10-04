@@ -142,11 +142,11 @@ Import-Module UniversalDashboard
         $squirrelSplat = @{'ConfigPath' = $packageConfig}
         if ($IconUrl) {$squirrelSplat['IconUrl'] = $IconUrl}
         if ($SetupIcon) {
-            $iconPath = (Get-ChildItem -Path $src -Include (Split-Path $SetupIcon -Leaf) -Recurse).FullName
+            $iconPath = (Get-ChildItem -Path $src -Filter (Split-Path $SetupIcon -Leaf) -Recurse).FullName
             $squirrelSplat['SetupIcon'] = $iconPath
         }
         if ($LoadingGif) {
-            $gifPath = (Get-ChildItem -Path $src -Include (Split-Path $LoadingGif -Leaf) -Recurse).FullName
+            $gifPath = (Get-ChildItem -Path $src -Filter (Split-Path $LoadingGif -Leaf) -Recurse).FullName
             $squirrelSplat['LoadingGif'] = $gifPath
         }
         Set-SquirrelConfig @squirrelSplat
