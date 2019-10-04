@@ -123,12 +123,12 @@ function New-UDDesktopApp {
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
 
         $content = Get-Content $dashboard -Raw
-        $content = @"
-{0} = {0} + "; {1}"
+        $content = @'
+{0} = {0} + ";{1}"
 Import-Module UniversalDashboard
 
 {2}
-"@ -f '$Env:PSModulePath', '$PSScriptRoot', $content
+'@ -f '$Env:PSModulePath', '$PSScriptRoot', $content
 
         $content | Out-File (Join-Path $src "dashboard.ps1") -Force -Encoding utf8
 
