@@ -164,14 +164,14 @@ Import-Module UniversalDashboard
 function Copy-UniversalDashboard {
     param($OutputPath)
 
-    $UniversaDashboard = (Get-Module -Name UniversalDashboard -ListAvailable)[0]
+    $UniversalDashboard = (Get-Module -Name UniversalDashboard -ListAvailable)[0]
 
-    if ($null -eq $UniversaDashboard)
+    if ($null -eq $UniversalDashboard)
     {
         throw "You need to install UniversalDashboard: Install-Module UniversalDashboard -Scope CurrentUser -AcceptLicense"
     }
 
-    $Directory = Split-Path $UniversaDashboard.Path -Parent
+    $Directory = Split-Path $UniversalDashboard.Path -Parent
 
     $UDDirectory = Join-Path $OutputPath "UniversalDashboard"
     New-Item $UDDirectory -ItemType Directory | Out-Null
