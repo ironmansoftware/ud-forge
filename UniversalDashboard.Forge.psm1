@@ -164,14 +164,18 @@ Import-Module UniversalDashboard
 function Copy-UniversalDashboard {
     param($OutputPath)
 
-    $UniversalDashboard = (Get-Module -Name UniversalDashboard -ListAvailable)[0]
+    $UniversalDashboard = Get-InstalledModule -Name UniversalDashboard -ErrorAction SilentlyContinue
 
     if ($null -eq $UniversalDashboard)
     {
-        throw "You need to install UniversalDashboard: Install-Module UniversalDashboard -Scope CurrentUser -AcceptLicense"
+        $UniversalDashboard = Get-InstalledModule -Name UniversalDashboard.Community -ErrorAction SilentlyContinue
+        if ($null -eq $UniversalDashboard)
+        {
+            throw "You need to install UniversalDashboard or UniversalDashboard.Community using Install-Module."
+        }
     }
 
-    $Directory = Split-Path $UniversalDashboard.Path -Parent
+    $Directory = $UniversalDashboard.InstalledLocation
 
     $UDDirectory = Join-Path $OutputPath "UniversalDashboard"
     New-Item $UDDirectory -ItemType Directory | Out-Null
