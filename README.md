@@ -18,6 +18,7 @@ Install-Module UniversalDashboard.Forge
 
 - [NodeJS ](https://nodejs.org/)
 - [PowerShell Core](https://github.com/PowerShell/PowerShell/releases)
+- [Git](https://git-scm.com/downloads)
 
 # Dashboard
 
