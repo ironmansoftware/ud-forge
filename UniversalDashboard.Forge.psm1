@@ -63,15 +63,15 @@ function New-UDDesktopApp {
         if ($PathInfo.PSIsContainer)
         {
             Write-Verbose "Path is a directory. Locating dashboard.ps1"
-            $Dashboard = Join-Path $PathInfo.FullName "dashboard.ps1"
-            if (-not (Test-Path $Dashboard))
+            $dashboard = Join-Path $PathInfo.FullName "dashboard.ps1"
+            if (-not (Test-Path $dashboard))
             {
                 throw "No dashboard.ps1 found in $Path"
             }
         }
         else
         {
-            $Dashboard = $Path
+            $dashboard = $Path
         }
 
         $Npx = Get-Command npx
@@ -117,36 +117,44 @@ function New-UDDesktopApp {
         if ($PathInfo.PSIsContainer)
         {
             Write-Verbose "Copying contents of $Path to $src"
-            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Container -Recurse
+            Copy-Item -Path "$($PathInfo.FullName)/*" -Destination $src -Exclude (Split-Path $OutputPath -Leaf) -Recurse
         }
 
         Write-Verbose "Copying dashboard and index.js to electron src folder: $src"
 
-        $Content = Get-Content $Dashboard -Raw
-        $Content = "
-        `$Env:PSModulePath = `$Env:PSModulePath + `";`$PSScriptRoot`"
-        Import-Module UniversalDashboard" + [System.Environment]::NewLine + $Content
-        $Content | Out-File (Join-Path $Src "dashboard.ps1") -Force -Encoding utf8
+        $content = Get-Content $dashboard -Raw
+        $content = @'
+{0} = {0} + ";{1}"
+Import-Module UniversalDashboard
+
+{2}
+'@ -f '$Env:PSModulePath', '$PSScriptRoot', $content
+
+        $content | Out-File (Join-Path $src "dashboard.ps1") -Force -Encoding utf8
 
         Copy-Item -Path (Join-Path $PSScriptRoot "index.js" ) -Destination $src -Force
-        $IndexJs = Join-Path $src "index.js"
+        $indexJs = Join-Path $src "index.js"
 
-        $port = Get-PortNumber -Path $Dashboard
-        Set-ForgeVariable -IndexPath $IndexJs -PowerShellHost $PowerShellHost -Port $port
+        $port = Get-PortNumber -Path $dashboard
+        Set-ForgeVariable -IndexPath $indexJs -PowerShellHost $PowerShellHost -Port $port
 
-        $PackageConfig = [IO.Path]::Combine($OutputPath, $Name, 'package.json')
-        $SquirrelSplat = @{'ConfigPath' = $PackageConfig}
-        if ($IconUrl) {$SquirrelSplat['IconUrl'] = $IconUrl}
-        if ($SetupIcon) {$SquirrelSplat['SetupIcon'] = $SetupIcon}
-        if ($LoadingGif) {$SquirrelSplat['LoadingGif'] = $LoadingGif}
-        Set-SquirrelConfig @SquirrelSplat
+        $packageConfig = [IO.Path]::Combine($OutputPath, $Name, 'package.json')
+        $squirrelSplat = @{'ConfigPath' = $packageConfig}
+        if ($IconUrl) {$squirrelSplat['IconUrl'] = $IconUrl}
+        if ($SetupIcon) {
+            $iconPath = (Get-ChildItem -Path $src -Filter (Split-Path $SetupIcon -Leaf) -Recurse)[0].FullName
+            $squirrelSplat['SetupIcon'] = $iconPath
+        }
+        if ($LoadingGif) {
+            $gifPath = (Get-ChildItem -Path $src -Filter (Split-Path $LoadingGif -Leaf) -Recurse)[0].FullName
+            $squirrelSplat['LoadingGif'] = $gifPath
+        }
+        Set-SquirrelConfig @squirrelSplat
 
         Write-Verbose "Copying Universal Dashboard to output path"
-
         Copy-UniversalDashboard -OutputPath $src
 
         Write-Verbose "Building electron app with forge"
-
         npm i -g @electron-forge/cli
         Set-Location (Join-Path $OutputPath $Name)
         electron-forge make
@@ -156,14 +164,14 @@ function New-UDDesktopApp {
 function Copy-UniversalDashboard {
     param($OutputPath)
 
-    $UniversaDashboard = Get-Module -Name UniversalDashboard -ListAvailable
+    $UniversalDashboard = (Get-Module -Name UniversalDashboard -ListAvailable)[0]
 
-    if ($null -eq $UniversaDashboard)
+    if ($null -eq $UniversalDashboard)
     {
-        throw "You need to install UniversalDashboard: Install-Module UniversalDashboard -Scope CurrentUser -AcceptList"
+        throw "You need to install UniversalDashboard: Install-Module UniversalDashboard -Scope CurrentUser -AcceptLicense"
     }
 
-    $Directory = Split-Path $UniversaDashboard.Path -Parent
+    $Directory = Split-Path $UniversalDashboard.Path -Parent
 
     $UDDirectory = Join-Path $OutputPath "UniversalDashboard"
     New-Item $UDDirectory -ItemType Directory | Out-Null
@@ -178,15 +186,15 @@ function Set-ForgeVariable {
         $Port
     )
 
-    $Content = Get-Content -Path $IndexPath -Raw
+    $content = Get-Content -Path $IndexPath -Raw
 
     Write-Verbose "Setting ForgeVariable PowerShellHost: $PowerShellHost"
-    $Content = $Content.Replace('$PowerShellHost', $PowerShellHost)
+    $content = $content.Replace('$PowerShellHost', $PowerShellHost)
 
     Write-Verbose "Setting ForgeVariable Port: $Port"
-    $Content = $Content.Replace('$Port', $Port)
+    $content = $content.Replace('$Port', $Port)
 
-    $Content | Out-File -FilePath $IndexPath -Force -Encoding utf8
+    $content | Out-File -FilePath $IndexPath -Force -Encoding utf8
 }
 
 function Get-PortNumber {
@@ -204,30 +212,19 @@ function Set-SquirrelConfig {
     param(
         [Parameter(Mandatory)]
         $ConfigPath,
-
         $IconUrl,
-
         $SetupIcon,
-
         $LoadingGif
     )
 
-    $Content = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
-    $SquirrelConfig = $Content.config.forge.makers | Where-Object {$_.name -like '*squirrel'}
+    $content = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
+    $squirrelConfig = $Content.Config.Forge.Makers.Where({$_.Name -like '*squirrel'}).Config
+    $keys = $PSBoundParameters.Keys.Where({$_ -ne 'ConfigPath'})
 
-    if ($IconUrl) {
-        Write-Verbose "Setting SquirrelConfig IconUrl: $IconUrl"
-        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'iconUrl' -Value $IconUrl
-    }
-
-    if ($SetupIcon) {
-        Write-Verbose "Setting SquirrelConfig SetupIcon: $SetupIcon"
-        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'setupIcon' -Value $SetupIcon
-    }
-
-    if ($LoadingGif) {
-        Write-Verbose "Setting SquirrelConfig LoadingGif: $LoadingGif"
-        $SquirrelConfig.config | Add-Member -MemberType NoteProperty -Name 'loadingGif' -Value $LoadingGif
+    foreach ($parameter in $keys) {
+        Write-Verbose ('Setting SquirrelConfig {0}: {1}' -f $parameter, $PSBoundParameters[$parameter])
+        $name = $parameter -replace '^\w', $parameter.Substring(0, 1).ToLower()
+        $squirrelConfig | Add-Member -MemberType NoteProperty -Name $name -Value $PSBoundParameters[$parameter]
     }
 
     $Content | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigPath -Force -Encoding utf8

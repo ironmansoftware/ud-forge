@@ -6,9 +6,9 @@ Build Desktop Apps with Universal Dashboard
 
 # About
 
-Universal Dashboard Forge uses [Electron](https://electronjs.org/) and Electron Forge to build desktops apps with Universal Dashboard. 
+Universal Dashboard Forge uses [Electron](https://electronjs.org/) and Electron Forge to build desktops apps with Universal Dashboard.
 
-# Installation 
+# Installation
 
 ```
 Install-Module UniversalDashboard.Forge
@@ -21,9 +21,9 @@ Install-Module UniversalDashboard.Forge
 
 # Dashboard
 
-Your dashboard file needs to be called `dashboard.ps1`, listen on port 8001 and use the `-Wait` parameter of `Start-UDDashboard`.
+Your dashboard file needs to be called `dashboard.ps1`, listen on the specified port and use the `-Wait` parameter of `Start-UDDashboard`.
 
-# Usage 
+# Usage
 
 Package a single ps1 file as a desktop application.
 
@@ -43,9 +43,8 @@ New-UDDesktopApp -Path .\dashboard -OutputPath .\out -Name MyApp
 
 # Installer
 
-An installer is also created in the output directory. This contains all the files necessary for electron, the app and Universal Dashboard. 
+An installer is also created in the output directory. This contains all the files necessary for electron, the app and Universal Dashboard.
 
 ```
 .\MyApp\out\make\squirrel.windows\x64\myapp-1.0.0 Setup.exe
 ```
-
