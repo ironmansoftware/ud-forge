@@ -44,7 +44,7 @@ function New-UDDesktopApp {
         $OutputPath,
         [Parameter()]
         [ValidateSet("pwsh", "powershell")]
-        $PowerShellHost = "pwsh",
+        $PowerShellHost = (Get-Process -Id $Pid).ProcessName,
         [Parameter()]
         $IconUrl,
         [Parameter()]
@@ -78,6 +78,12 @@ function New-UDDesktopApp {
         if ($null -eq $Npx)
         {
             throw "NodeJS is required to run New-UDDesktopApp. Download here: https://nodejs.org"
+        }
+
+        $Git = Get-Command git
+        if ($null -eq $Git)
+        {
+            throw "Git is required to run New-UDDesktopApp."
         }
 
         if ($null -eq $OutputPath)
